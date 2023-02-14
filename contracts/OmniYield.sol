@@ -9,6 +9,8 @@ import "./interfaces/IStargateRouter.sol";
 interface Vault {
     function deposit(uint256 _amount) external returns (uint256); 
     function withdraw(uint256 _maxShares) external returns (uint256);
+    function balanceOf(address account) external view returns (uint256);
+    function pricePerShare() external view returns (uint256);
 }
 
 contract OmniYield is NonblockingLzApp {
@@ -173,4 +175,14 @@ contract OmniYield is NonblockingLzApp {
             src_coin.transfer(_add, amountLD);
         }
     }
+
+    // Getter Functions
+
+    function getUserBalance(address _user) public view returns (uint256) {
+        return user[_user].balance;
+    }
+
+    function getUnderlyingShares() public view returns (uint256) {
+        return yearnVault.balanceOf(address(this));
+    } 
 }
