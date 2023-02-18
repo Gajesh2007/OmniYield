@@ -5,7 +5,7 @@ import "./lzApp/NonblockingLzApp.sol";
 import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IStargateRouter.sol";
 
-contract OmniYield is NonblockingLzApp {
+contract Source is NonblockingLzApp {
     uint16 dstChainId;
     uint256 srcPoolId;
     uint256 dstPoolId;
@@ -23,13 +23,15 @@ contract OmniYield is NonblockingLzApp {
         uint256 _srcPoolId,
         uint256 _dstPoolId,
         address _srcAddress,
-        IERC20 _token
+        IERC20 _token,
+        IStargateRouter _stargateRouter
     ) NonblockingLzApp(_lzEndpoint) {
         dstChainId = _chainId;
         srcPoolId = _srcPoolId;
         dstPoolId = _dstPoolId;
         srcAddress = _srcAddress;
         token = _token;
+        stargateRouter = _stargateRouter;
     }
 
     function deposit(uint256 _amount) public payable {
@@ -41,8 +43,8 @@ contract OmniYield is NonblockingLzApp {
         bytes memory data = abi.encode(msg.sender);
 
         // this contract calls stargate swap()
-        token.transferFrom(msg.sender, address(this), MAX);
-        token.approve(address(stargateRouter), _amount);
+        // token.transferFrom(msg.sender, address(this), MAX);
+        token.approve(address(stargateRouter), MAX);
 
         // Stargate's Router.swap() function sends the tokens to the destination chain.
         stargateRouter.swap{value:msg.value}(

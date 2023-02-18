@@ -12,30 +12,34 @@ interface Vault {
     function pricePerShare() external view returns (uint256);
 }
 
-contract OmniYield is NonblockingLzApp {
+contract Destination is NonblockingLzApp {
     IERC20 public token;
     
     // Pool Id of the Destination chain
     uint256 public srcPoolId;
 
-    IStargateRouter public stargateRouter;
+    IStargateRouter public stargateRouter = IStargateRouter(0x7612aE2a34E5A363E137De748801FB4c86499152);
     Vault public yearnVault;
 
     uint256 MAX = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
 
     constructor(
         address _lzEndpoint, 
-        uint16 _srcChainId, 
-        uint256 poolId,
-        address srcAddress,
+        uint16 _srcChainId,
+        uint256 _srcPoolId, 
+        uint256 _poolId,
+        address _srcAddress,
         IERC20 _src_coin, 
-        IERC20 _dst_coin
+        IERC20 _dst_coin,
+        Vault _yearnVault
     ) NonblockingLzApp(_lzEndpoint) {
+        srcPoolId = _srcPoolId;
         src[_srcChainId].allowed = true;
-        src[_srcChainId].poolId = poolId;
-        src[_srcChainId].srcAddress = srcAddress;
+        src[_srcChainId].poolId = _poolId;
+        src[_srcChainId].srcAddress = _srcAddress;
         src[_srcChainId].token = _src_coin;
         token = _dst_coin;
+        yearnVault = _yearnVault;
     }
 
     struct UserData {
@@ -79,11 +83,13 @@ contract OmniYield is NonblockingLzApp {
 
         token.approve(address(stargateRouter), MAX);
 
+        uint256 pool_id = src[_srcChainId].poolId;
+
         // Stargate's Router.swap() function sends the tokens to the destination chain.
         stargateRouter.swap{value:msg.value}(
             _srcChainId,                                     // the destination chain id
             srcPoolId,                                      // the source Stargate poolId
-            src[_srcChainId].poolId,                                      // the destination Stargate poolId
+            pool_id,                                      // the destination Stargate poolId
             payable(msg.sender),                            // refund adddress. if msg.sender pays too much gas, return extra eth
             amount_received,                                // total tokens to send to destination chain
             0,                                              // min amount allowed out
