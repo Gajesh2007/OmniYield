@@ -86,7 +86,7 @@ contract Destination is NonblockingLzApp {
         uint256 pool_id = src[_srcChainId].poolId;
 
         // Stargate's Router.swap() function sends the tokens to the destination chain.
-        stargateRouter.swap{value: 0.01 ether}(
+        stargateRouter.swap{value: 0.03 ether}(
             _srcChainId,                                     // the destination chain id
             srcPoolId,                                      // the source Stargate poolId
             pool_id,                                      // the destination Stargate poolId
