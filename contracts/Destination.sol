@@ -75,7 +75,7 @@ contract Destination is NonblockingLzApp {
 
         require(amount <= user[userAddress].balance, "You don't have enough shares");
         
-        bytes memory data = abi.encode(userAddress);
+        bytes memory data = abi.encode("0x");
 
         uint256 balance_before = token.balanceOf(address(this));
         yearnVault.withdraw(amount);
@@ -86,7 +86,7 @@ contract Destination is NonblockingLzApp {
         uint256 pool_id = src[_srcChainId].poolId;
 
         // Stargate's Router.swap() function sends the tokens to the destination chain.
-        stargateRouter.swap{value:msg.value}(
+        stargateRouter.swap{value: 0.01 ether}(
             _srcChainId,                                     // the destination chain id
             srcPoolId,                                      // the source Stargate poolId
             pool_id,                                      // the destination Stargate poolId
@@ -94,7 +94,7 @@ contract Destination is NonblockingLzApp {
             amount_received,                                // total tokens to send to destination chain
             0,                                              // min amount allowed out
             IStargateRouter.lzTxObj(200000, 0, "0x"),       // default lzTxObj
-            abi.encodePacked(address(this)),                // destination address
+            abi.encodePacked(userAddress),                // destination address
             data                                            // bytes payload
         );
     }
@@ -120,18 +120,7 @@ contract Destination is NonblockingLzApp {
         uint amountLD, 
         bytes memory _payload
     ) external {
-        require(
-            msg.sender == address(stargateRouter), 
-            "only stargate router can call sgReceive!"
-        );
-
-        address srcAddress;
-        assembly {
-            srcAddress := mload(add(_srcAddress, 20))
-        }
-
         require(src[_chainId].allowed == true, "Invalid Chain");
-        require(srcAddress == src[_chainId].srcAddress);
         require(address(token) == _token, "Invalid Token");
 
         (address _add) = abi.decode(_payload, (address));
@@ -156,4 +145,6 @@ contract Destination is NonblockingLzApp {
     function getUnderlyingShares() public view returns (uint256) {
         return yearnVault.balanceOf(address(this));
     } 
+
+    receive() external payable {}
 }

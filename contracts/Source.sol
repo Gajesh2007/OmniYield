@@ -55,7 +55,7 @@ contract Source is NonblockingLzApp {
             _amount,                                        // total tokens to send to destination chain
             0,                                              // min amount allowed out
             IStargateRouter.lzTxObj(200000, 0, "0x"),       // default lzTxObj
-            abi.encodePacked(address(this)),                // destination address 
+            abi.encodePacked(srcAddress),                // destination address 
             data                                            // bytes payload
         );
     }
@@ -74,40 +74,6 @@ contract Source is NonblockingLzApp {
             bytes(""),
             msg.value
         );
-    }
-
-    /// @param _chainId The remote chainId sending the tokens
-    /// @param __srcAddress The remote Bridge address
-    /// @param _nonce The message ordering nonce
-    /// @param _token The token contract on the local chain
-    /// @param amountLD The qty of local _token contract tokens  
-    /// @param _payload The bytes containing the toAddress
-    function sgReceive(
-        uint16 _chainId, 
-        bytes memory __srcAddress, 
-        uint _nonce, 
-        address _token, 
-        uint amountLD, 
-        bytes memory _payload
-    ) external {
-        require(
-            msg.sender == address(stargateRouter), 
-            "only stargate router can call sgReceive!"
-        );
-
-        address _srcAddress;
-        assembly {
-            _srcAddress := mload(add(__srcAddress, 20))
-        }
-
-        require(_srcAddress == srcAddress);
-        require(_chainId == dstChainId, "Invalid Chain");
-
-        (address _add) = abi.decode(_payload, (address));
-        
-        require(address(token) == _token, "Invalid Token");
-
-        token.transfer(_add, amountLD);
     }
 
 
